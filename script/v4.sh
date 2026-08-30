@@ -273,8 +273,7 @@ OPENLIST_ERROR_LOG_FILE="/var/log/openlist.error.log"
 # Docker 配置
 DOCKER_IMAGE_TAG="beta"
 DOCKER_CONTAINER_NAME="openlist"
-DOCKER_IMAGE="v200dd/openlist:ipa"
-DOCKER_BUILD_REPO="https://github.com/v200dd/OpenList.git#main"
+DOCKER_IMAGE="ghcr.io/v200dd/openlist-git:beta"
 DOCKER_PORT="5244"
 
 # 定时更新配置
@@ -470,7 +469,7 @@ restore_config() {
 
 
 select_docker_image_tag() {
-    echo -e "${GREEN_COLOR}将从 v200dd/OpenList 的 main 分支构建定制镜像${RES}"
+    echo -e "${GREEN_COLOR}将使用 GitHub 预构建定制镜像 ${DOCKER_IMAGE}${RES}"
 }
 
 
@@ -501,12 +500,11 @@ docker_install() {
         return 1
     fi
 
-    # Build the image before replacing a running container so an existing
-    # installation remains available if a source build fails.
+    # Pull the prebuilt image before replacing a running container.
     select_docker_image_tag
-    echo -e "${GREEN_COLOR}正在构建定制镜像，首次构建需要几分钟...${RES}"
-    if ! docker build --pull -t "${DOCKER_IMAGE}" "${DOCKER_BUILD_REPO}"; then
-        echo -e "${RED_COLOR}定制镜像构建失败，未改动现有 Container${RES}"
+    echo -e "${GREEN_COLOR}正在下载定制镜像...${RES}"
+    if ! docker pull "${DOCKER_IMAGE}"; then
+        echo -e "${RED_COLOR}定制镜像下载失败，未改动现有 Container${RES}"
         return 1
     fi
 
