@@ -273,6 +273,8 @@ OPENLIST_ERROR_LOG_FILE="/var/log/openlist.error.log"
 # Docker 配置
 DOCKER_IMAGE_TAG="beta"
 DOCKER_CONTAINER_NAME="openlist"
+DOCKER_IMAGE="v200dd/openlist:ipa"
+DOCKER_BUILD_REPO="https://github.com/v200dd/OpenList.git#main"
 DOCKER_PORT="5244"
 
 # 定时更新配置
@@ -468,35 +470,7 @@ restore_config() {
 
 
 select_docker_image_tag() {
-    echo -e "${BLUE_COLOR}请选择要使用的 OpenList Docker 镜像标签：${RES}"
-    echo -e "${GREEN_COLOR}1${RES} - beta-ffmpeg"
-    echo -e "${GREEN_COLOR}2${RES} - beta-aio"
-    echo -e "${GREEN_COLOR}3${RES} - beta-aria2"
-    echo -e "${GREEN_COLOR}4${RES} - beta (默认)"
-    echo -e "${GREEN_COLOR}5${RES} - 手动输入标签"
-    echo
-    read -p "请输入选项 [1-5] (默认4): " tag_choice
-    case "$tag_choice" in
-        1)
-            DOCKER_IMAGE_TAG="beta-ffmpeg";;
-        2)
-            DOCKER_IMAGE_TAG="beta-aio";;
-        3)
-            DOCKER_IMAGE_TAG="beta-aria2";;
-        4|"")
-            DOCKER_IMAGE_TAG="beta";;
-        5)
-            read -p "请输入自定义标签: " custom_tag
-            if [ -n "$custom_tag" ]; then
-                DOCKER_IMAGE_TAG="$custom_tag"
-            else
-                DOCKER_IMAGE_TAG="beta"
-            fi
-            ;;
-        *)
-            DOCKER_IMAGE_TAG="beta";;
-    esac
-    echo -e "${GREEN_COLOR}已选择镜像标签: $DOCKER_IMAGE_TAG${RES}"
+    echo -e "${GREEN_COLOR}将从 v200dd/OpenList 的 main 分支构建定制镜像${RES}"
 }
 
 
@@ -527,8 +501,14 @@ docker_install() {
         return 1
     fi
 
-    # 选择镜像标签
+    # Build the image before replacing a running container so an existing
+    # installation remains available if a source build fails.
     select_docker_image_tag
+    echo -e "${GREEN_COLOR}正在构建定制镜像，首次构建需要几分钟...${RES}"
+    if ! docker build --pull -t "${DOCKER_IMAGE}" "${DOCKER_BUILD_REPO}"; then
+        echo -e "${RED_COLOR}定制镜像构建失败，未改动现有 Container${RES}"
+        return 1
+    fi
 
     # 检查
     if docker ps -a --format "table {{.Names}}" | grep -q "^${DOCKER_CONTAINER_NAME}$"; then
@@ -563,7 +543,7 @@ docker_install() {
         -p ${DOCKER_PORT}:5244 \
         -v /opt/openlist/data:/opt/openlist/data \
         --user ${CURRENT_UID}:${CURRENT_GID} \
-        openlistteam/openlist:${DOCKER_IMAGE_TAG}; then
+        "${DOCKER_IMAGE}"; then
 
         echo -e "${GREEN_COLOR}Docker Container创建成功！${RES}"
 
