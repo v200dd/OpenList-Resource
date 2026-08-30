@@ -7,7 +7,7 @@
 # Last Updated: 2026-06-17
 #
 # Description:
-#   A management script for OpenList (https://github.com/OpenListTeam/OpenList)
+#   A management script for OpenList (https://github.com/v200dd/OpenList)
 #   Provides installation, update, uninstallation and management functions
 #   Enhanced with disk space checking, config backup/restore, password management
 #
@@ -261,10 +261,10 @@ fi
 
 # 配置部分
 # GitHub 相关配置
-GITHUB_REPO="OpenListTeam/OpenList"
+GITHUB_REPO="v200dd/OpenList"
 VERSION_TAG="beta"
 VERSION_FILE="/opt/openlist/.version"
-GH_DOWNLOAD_URL="${GH_PROXY}https://github.com/OpenListTeam/OpenList/releases/latest/download"
+GH_DOWNLOAD_URL="${GH_PROXY}https://github.com/v200dd/OpenList/releases/download/beta"
 
 # OpenRC logfile 配置
 OPENLIST_LOG_FILE="/var/log/openlist.log"
@@ -812,11 +812,11 @@ INSTALL() {
   # 如果用户输入了代理地址，则使用代理拼接下载链接
   if [ -n "$proxy_input" ]; then
     GH_PROXY="$proxy_input"
-    GH_DOWNLOAD_URL="${GH_PROXY}https://github.com/OpenListTeam/OpenList/releases/latest/download"
+    GH_DOWNLOAD_URL="${GH_PROXY}https://github.com/v200dd/OpenList/releases/download/beta"
     echo -e "${GREEN_COLOR}已使用代理地址: $GH_PROXY${RES}"
   else
     # 如果不需要代理，直接使用默认链接
-    GH_DOWNLOAD_URL="https://github.com/OpenListTeam/OpenList/releases/latest/download"
+    GH_DOWNLOAD_URL="https://github.com/v200dd/OpenList/releases/download/beta"
     echo -e "${GREEN_COLOR}使用默认 GitHub 地址进行下载${RES}"
   fi
 
@@ -993,45 +993,26 @@ UPDATE() {
         # 如果用户输入了代理地址，则使用代理拼接下载链接
         if [ -n "$proxy_input" ]; then
             GH_PROXY="$proxy_input"
-            GH_DOWNLOAD_URL="${GH_PROXY}https://github.com/OpenListTeam/OpenList/releases/download"
+            GH_DOWNLOAD_URL="${GH_PROXY}https://github.com/v200dd/OpenList/releases/download/beta"
             echo -e "${GREEN_COLOR}已使用代理地址: $GH_PROXY${RES}"
         else
             # 如果不需要代理，直接使用默认链接
             GH_PROXY=""
-            GH_DOWNLOAD_URL="https://github.com/OpenListTeam/OpenList/releases/download"
+            GH_DOWNLOAD_URL="https://github.com/v200dd/OpenList/releases/download/beta"
             echo -e "${GREEN_COLOR}使用默认 GitHub 地址进行下载${RES}"
         fi
     else
         # 非交互模式（例如后台或 cron）使用环境变量 GH_PROXY（如果设置）或默认下载地址
         if [ -n "$GH_PROXY" ]; then
-            GH_DOWNLOAD_URL="${GH_PROXY}https://github.com/OpenListTeam/OpenList/releases/download"
+            GH_DOWNLOAD_URL="${GH_PROXY}https://github.com/v200dd/OpenList/releases/download/beta"
         else
             GH_PROXY=""
-            GH_DOWNLOAD_URL="https://github.com/OpenListTeam/OpenList/releases/download"
+            GH_DOWNLOAD_URL="https://github.com/v200dd/OpenList/releases/download/beta"
         fi
     fi
 
-    # 获取真实版本信息
-    echo -e "${GREEN_COLOR}获取版本信息...${RES}"
-    REAL_VERSION=$(curl -s "https://api.github.com/repos/OpenListTeam/OpenList/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/' 2>/dev/null | grep . || echo "$VERSION_TAG")
-
-    if [ "$REAL_VERSION" = "beta" ]; then
-        # 网络问题，获取失败，默认使用latest下载地址
-        echo -e "${YELLOW_COLOR}提示：获取最新版本信息失败，默认升级到latest版本！${RES}"
-        GH_DOWNLOAD_URL="${GH_PROXY}https://github.com/OpenListTeam/OpenList/releases/latest/download"
-    else
-        # 检查当前版本
-        CURRENT_VERSION=""
-        if [ -f "$VERSION_FILE" ]; then
-            CURRENT_VERSION=$(head -n1 "$VERSION_FILE" 2>/dev/null)
-        fi
-
-        if [ -n "$CURRENT_VERSION" ] && [ "$CURRENT_VERSION" = "$REAL_VERSION" ]; then
-            echo -e "${GREEN_COLOR}当前已是最新版本 ($CURRENT_VERSION)，无需更新${RES}"
-            return 0
-        fi
-        GH_DOWNLOAD_URL="${GH_DOWNLOAD_URL}/${REAL_VERSION}"
-    fi
+    # Custom builds are published under the moving beta tag.
+    REAL_VERSION="$VERSION_TAG"
 
     # 停止 OpenList 服务
     echo -e "${GREEN_COLOR}停止 OpenList 进程${RES}\r\n"
@@ -1383,7 +1364,7 @@ SHOW_ABOUT() {
     echo -e "${GREEN_COLOR}│                                                    │${RES}"
     echo -e "${GREEN_COLOR}│                                                    │${RES}"
     echo -e "${GREEN_COLOR}│  ${CYAN_COLOR}OpenList：${RES}                                      │"
-    echo -e "${GREEN_COLOR}│    主项目: https://github.com/OpenListTeam/OpenList│${RES}"
+    echo -e "${GREEN_COLOR}│    主项目: https://github.com/v200dd/OpenList        │${RES}"
     echo -e "${GREEN_COLOR}│    文档库: https://github.com/OpenListTeam/docs    │${RES}"
     echo -e "${GREEN_COLOR}│                                                    │${RES}"
     echo -e "${GREEN_COLOR}│  ${CYAN_COLOR}作者信息：${RES}                                      │"
